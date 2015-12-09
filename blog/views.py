@@ -5,7 +5,7 @@ from calendar import month_name
 
 from django.contrib.auth import get_user_model
 from django.http import Http404
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 
 from mezzanine.blog.models import BlogPost, BlogCategory
 from mezzanine.blog.feeds import PostsRSS, PostsAtom
@@ -16,12 +16,6 @@ from mezzanine.utils.views import render, paginate
 from laterpay import LaterPayClient, ItemDefinition
 
 User = get_user_model()
-
-
-lpclient = LaterPayClient(cp_key=settings.LATERPAY_ID,
-                          shared_secret=settings.LATERPAY_KEY,
-                          api_root=settings.LATERPAY_API_ROOT,
-                          web_root=settings.LATERPAY_WEB_ROOT)
 
 
 def blog_post_list(request, tag=None, year=None, month=None, username=None,
@@ -76,18 +70,52 @@ def blog_post_detail(request, slug, year=None, month=None, day=None,
     ``blog/blog_post_detail_XXX.html`` where ``XXX`` is the blog
     posts's slug.
     """
-    blog_posts = BlogPost.objects.published(
-                                     for_user=request.user).select_related()
+    lpclient = LaterPayClient(cp_key=settings.LATERPAY_ID,
+                              shared_secret=settings.LATERPAY_KEY,
+                              api_root=settings.LATERPAY_API_ROOT,
+                              web_root=settings.LATERPAY_WEB_ROOT,
+                              lptoken=request.session.get('lptoken'))
+    post_url = request.build_absolute_uri()
+    # check for laterpay token in url
+    url_lptoken = request.GET.get('lptoken')
+    if url_lptoken:
+        request.session['lptoken'] = url_lptoken
+        lpclient.lptoken = url_lptoken
+    # check for laterpay token in session data
+    if not request.session.get('lptoken', False):
+        gettoken_url = lpclient.get_gettoken_redirect(post_url)
+        return redirect(gettoken_url)
+
+    # Get blog post
+    blog_posts = BlogPost.objects.published(for_user=request.user) \
+                                 .select_related()
     blog_post = get_object_or_404(blog_posts, slug=slug)
     related_posts = blog_post.related_posts.published(for_user=request.user)
-    context = {"blog_post": blog_post, "editable_obj": blog_post,
-               "related_posts": related_posts}
+    context = {
+        "blog_post": blog_post,
+        "editable_obj": blog_post,
+        "related_posts": related_posts,
+    }
     context.update(extra_context or {})
     templates = [u"blog/blog_post_detail_%s.html" % str(slug), template]
-    print 'DETAIL! POST', blog_post.slug, '(%s)' % blog_post.id, 'url:', request.build_absolute_uri()
-    item = ItemDefinition(blog_post.slug, 'EUR50', request.build_absolute_uri(),
-                          blog_post.title, cp=settings.LATERPAY_ID)
-    print lpclient.get_add_url(item, use_dialog_api=False)
+
+    article_id = blog_post.slug
+    access_data = lpclient.get_access(article_id)
+    if access_data.get('status') == 'invalid_token':
+        gettoken_url = lpclient.get_gettoken_redirect(post_url)
+        return redirect(gettoken_url)
+    article_access = False
+    if access_data.get('status') == 'ok':
+        # See if user has access
+        article_access = access_data['articles'][article_id]['access']
+
+    if not article_access:
+        item = ItemDefinition(article_id, 'EUR50',
+                              request.build_absolute_uri(),
+                              blog_post.title, cp=settings.LATERPAY_ID)
+        add_url = lpclient.get_add_url(item, use_dialog_api=False)
+        return redirect(add_url)
+
     return render(request, templates, context)
 
 
