@@ -13,7 +13,15 @@ from mezzanine.conf import settings
 from mezzanine.generic.models import Keyword
 from mezzanine.utils.views import render, paginate
 
+from laterpay import LaterPayClient, ItemDefinition
+
 User = get_user_model()
+
+
+lpclient = LaterPayClient(cp_key=settings.LATERPAY_ID,
+                          shared_secret=settings.LATERPAY_KEY,
+                          api_root=settings.LATERPAY_API_ROOT,
+                          web_root=settings.LATERPAY_WEB_ROOT)
 
 
 def blog_post_list(request, tag=None, year=None, month=None, username=None,
@@ -76,6 +84,10 @@ def blog_post_detail(request, slug, year=None, month=None, day=None,
                "related_posts": related_posts}
     context.update(extra_context or {})
     templates = [u"blog/blog_post_detail_%s.html" % str(slug), template]
+    print 'DETAIL! POST', blog_post.slug, '(%s)' % blog_post.id, 'url:', request.build_absolute_uri()
+    item = ItemDefinition(blog_post.slug, 'EUR50', request.build_absolute_uri(),
+                          blog_post.title, cp=settings.LATERPAY_ID)
+    print lpclient.get_add_url(item, use_dialog_api=False)
     return render(request, templates, context)
 
 
