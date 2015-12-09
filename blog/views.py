@@ -19,7 +19,7 @@ User = get_user_model()
 
 
 def blog_post_list(request, tag=None, year=None, month=None, username=None,
-                   category=None, template="blog/blog_post_list.html",
+                   category=None, template="blog_post_list.html",
                    extra_context=None):
     """
     Display a list of blog posts that are filtered by tag, year, month,
@@ -43,13 +43,13 @@ def blog_post_list(request, tag=None, year=None, month=None, username=None,
     if category is not None:
         category = get_object_or_404(BlogCategory, slug=category)
         blog_posts = blog_posts.filter(categories=category)
-        templates.append(u"blog/blog_post_list_%s.html" %
+        templates.append(u"blog_post_list_%s.html" %
                           str(category.slug))
     author = None
     if username is not None:
         author = get_object_or_404(User, username=username)
         blog_posts = blog_posts.filter(user=author)
-        templates.append(u"blog/blog_post_list_%s.html" % username)
+        templates.append(u"blog_post_list_%s.html" % username)
 
     prefetch = ("categories", "keywords__keyword")
     blog_posts = blog_posts.select_related("user").prefetch_related(*prefetch)
