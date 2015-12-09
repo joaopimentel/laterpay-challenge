@@ -12,7 +12,7 @@ _slashes = (
 )
 
 # Blog patterns.
-urlpatterns = patterns("mezzanine.blog.views",
+urlpatterns = patterns("blog.views",
     url("^%sfeeds/(?P<format>.*)%s$" % _slashes,
         "blog_post_feed", name="blog_post_feed"),
     url("^%stag/(?P<tag>.*)/feeds/(?P<format>.*)%s$" % _slashes,
