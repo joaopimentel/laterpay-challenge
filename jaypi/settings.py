@@ -4,6 +4,8 @@ import os
 from django.utils.translation import ugettext_lazy as _
 
 
+SECRET_KEY = os.getenv('SECRET_KEY')
+
 ######################
 # MEZZANINE SETTINGS #
 ######################
