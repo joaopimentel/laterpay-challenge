@@ -96,7 +96,7 @@ blog_installed = "mezzanine.blog" in settings.INSTALLED_APPS
 if blog_installed:
     BLOG_SLUG = settings.BLOG_SLUG.rstrip("/")
     blog_patterns = patterns("",
-        ("^%s" % BLOG_SLUG, include("jaypi.custom_blog_urls")),
+        ("^%s" % BLOG_SLUG, include("blog.urls")),
     )
     urlpatterns += blog_patterns
 
