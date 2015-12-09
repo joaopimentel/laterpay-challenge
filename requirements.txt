@@ -1,3 +1,8 @@
 Mezzanine==4.0.1
 git+https://github.com/laterpay/laterpay-client-python.git@develop
 dj-database-url
+django-postgrespool==0.3.0
+gunicorn==19.3.0
+psycopg2==2.6
+SQLAlchemy==1.0.4
+whitenoise==1.0.6
