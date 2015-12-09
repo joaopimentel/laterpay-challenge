@@ -15,4 +15,7 @@ from mezzanine.utils.conf import real_project_name
 os.environ.setdefault("DJANGO_SETTINGS_MODULE",
                       "%s.settings" % real_project_name("jaypi"))
 
+from whitenoise.django import DjangoWhiteNoise
+
 application = get_wsgi_application()
+application = DjangoWhiteNoise(application)
