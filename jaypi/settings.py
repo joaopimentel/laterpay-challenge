@@ -303,6 +303,13 @@ if os.path.exists(f):
     exec(open(f, "rb").read())
 
 
+# LaterPay settings
+LATERPAY_ID = os.getenv('LATERPAY_ID')
+LATERPAY_KEY = os.getenv('LATERPAY_KEY')
+LATERPAY_API_ROOT = 'https://api.dev.laterpaytest.net'
+LATERPAY_WEB_ROOT = 'https://web.dev.laterpaytest.net'
+
+
 ####################
 # DYNAMIC SETTINGS #
 ####################
